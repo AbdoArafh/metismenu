@@ -15,6 +15,10 @@
 
   var $__default = /*#__PURE__*/_interopDefaultLegacy($);
 
+  // function flattenArray(arr) {
+  //   return [].concat(...arr);
+  // }
+
   const Util = (($) => { // eslint-disable-line no-shadow
     const TRANSITION_END = 'transitionend';
 
@@ -29,13 +33,32 @@
         return Boolean(TRANSITION_END);
       },
 
-      children(element, target) {
-        // todo make it deal with more than one element
-        return Array.from(element.querySelectorAll(target));
+      flattenArray(arr) {
+        return [].concat(...arr);
+      },
+
+      children(elements, query="*") {
+        return this.flattenArray(
+          Array.from(elements).map(element => (
+            Array.from(element.querySelectorAll(query))
+          ))
+        );
       },
 
       hasClass(elements, className) {
         return elements.every(el => el.classList.contains(className));
+      },
+
+      addClass(elements, className) {
+        Array.from(elements).forEach(el => el.classList.add(className));
+      },
+
+      removeClass(elements, className) {
+        Array.from(elements).forEach(el => el.classList.remove(className));
+      },
+
+      attr(elements, key, value) {
+        elements.forEach(el => el.setAttribute(key, value));
       }
     };
 
@@ -132,8 +155,22 @@
       const conf = this.config;
       const el = $__default["default"](this.element);
 
-      el.addClass(ClassName.METIS); // add metismenu class to element
+      Util.addClass(el, ClassName.METIS);
 
+      //* console.log(el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`));
+      //* console.log(Util.children(el[0], `${conf.parentTrigger}.${ClassName.ACTIVE}`));
+
+      // Util.attr(
+      //   Util.children(
+      //     Util.children(
+      //       el,
+      //       `${conf.parentTrigger}.${ClassName.ACTIVE}`
+      //       ),
+      //     conf.triggerElement
+      //   ),
+      //   'aria-expanded',
+      //   'true'
+      // )
       el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
         .children(conf.triggerElement)
         .attr('aria-expanded', 'true'); // add attribute aria-expanded=true the trigger element
@@ -197,20 +234,16 @@
     }
 
     setActive(li) {
-      // todo change this li[0]
-
-      li[0].classList.add(ClassName.ACTIVE);
-      const ul = Util.children(li[0], this.config.subMenu);
+      Util.addClass(li, ClassName.ACTIVE);
+      const ul = Util.children(li, this.config.subMenu);
       if (ul.length > 0 && !Util.hasClass(ul, ClassName.SHOW)) {
         this.show(ul);
       }
     }
 
     removeActive(li) {
-      // todo change this li[0]
-      
-      li[0].classList.remove(ClassName.ACTIVE);
-      const ul = Util.children(li[0], `${this.config.subMenu}.${ClassName.SHOW}`);
+      Util.removeClass(li, ClassName.ACTIVE);
+      const ul = Util.children(li, `${this.config.subMenu}.${ClassName.SHOW}`);
       if (ul.length > 0) {
         this.hide(ul);
       }

@@ -51,8 +51,22 @@ class MetisMenu {
     const conf = this.config;
     const el = $(this.element);
 
-    el.addClass(ClassName.METIS); // add metismenu class to element
+    Util.addClass(el, ClassName.METIS);
 
+    //* console.log(el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`));
+    //* console.log(Util.children(el[0], `${conf.parentTrigger}.${ClassName.ACTIVE}`));
+
+    // Util.attr(
+    //   Util.children(
+    //     Util.children(
+    //       el,
+    //       `${conf.parentTrigger}.${ClassName.ACTIVE}`
+    //       ),
+    //     conf.triggerElement
+    //   ),
+    //   'aria-expanded',
+    //   'true'
+    // )
     el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
       .children(conf.triggerElement)
       .attr('aria-expanded', 'true'); // add attribute aria-expanded=true the trigger element
@@ -116,20 +130,16 @@ class MetisMenu {
   }
 
   setActive(li) {
-    // todo change this li[0]
-
-    li[0].classList.add(ClassName.ACTIVE);
-    const ul = Util.children(li[0], this.config.subMenu);
+    Util.addClass(li, ClassName.ACTIVE);
+    const ul = Util.children(li, this.config.subMenu);
     if (ul.length > 0 && !Util.hasClass(ul, ClassName.SHOW)) {
       this.show(ul);
     }
   }
 
   removeActive(li) {
-    // todo change this li[0]
-    
-    li[0].classList.remove(ClassName.ACTIVE);
-    const ul = Util.children(li[0], `${this.config.subMenu}.${ClassName.SHOW}`)
+    Util.removeClass(li, ClassName.ACTIVE);
+    const ul = Util.children(li, `${this.config.subMenu}.${ClassName.SHOW}`);
     if (ul.length > 0) {
       this.hide(ul);
     }

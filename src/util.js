@@ -1,5 +1,9 @@
 import $ from 'jquery';
 
+// function flattenArray(arr) {
+//   return [].concat(...arr);
+// }
+
 const Util = (($) => { // eslint-disable-line no-shadow
   const TRANSITION_END = 'transitionend';
 
@@ -14,13 +18,32 @@ const Util = (($) => { // eslint-disable-line no-shadow
       return Boolean(TRANSITION_END);
     },
 
-    children(element, target) {
-      // todo make it deal with more than one element
-      return Array.from(element.querySelectorAll(target));
+    flattenArray(arr) {
+      return [].concat(...arr);
+    },
+
+    children(elements, query="*") {
+      return this.flattenArray(
+        Array.from(elements).map(element => (
+          Array.from(element.querySelectorAll(query))
+        ))
+      );
     },
 
     hasClass(elements, className) {
       return elements.every(el => el.classList.contains(className));
+    },
+
+    addClass(elements, className) {
+      Array.from(elements).forEach(el => el.classList.add(className));
+    },
+
+    removeClass(elements, className) {
+      Array.from(elements).forEach(el => el.classList.remove(className));
+    },
+
+    attr(elements, key, value) {
+      elements.forEach(el => el.setAttribute(key, value));
     }
   };
 
