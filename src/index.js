@@ -53,32 +53,66 @@ class MetisMenu {
 
     Util.addClass(el, ClassName.METIS);
 
-    //* console.log(el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`));
-    //* console.log(Util.children(el[0], `${conf.parentTrigger}.${ClassName.ACTIVE}`));
+    const ActiveEl = Util.find(
+      el,
+      `${conf.parentTrigger}.${ClassName.ACTIVE}`
+    );
 
-    // Util.attr(
+    Util.attr(
+      Util.find(
+        ActiveEl,
+        conf.triggerElement
+      ),
+      'aria-expanded',
+      'true'
+    );
+
+    // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
+    //   .children(conf.triggerElement)
+    //   .attr('aria-expanded', 'true'); // add attribute aria-expanded=true the trigger element
+    
+    
+    Util.addClass(
+      Util.parents(
+        ActiveEl,
+        "li"
+      ),
+      ClassName.ACTIVE
+    );
+
+    // TODO (proposal) el.prototype = Object.assign(el.prototype || {}, Util);
+        
+    // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
+    //   .parents(conf.parentTrigger)
+    //   .addClass(ClassName.ACTIVE);
+
+    Util.attr(
+      Util.children(
+        Util.parents(
+          ActiveEl,
+          conf.parentTrigger
+        ),
+        conf.triggerElement
+      ),
+      "aria-expanded",
+      "true"
+    );
+
+    // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
+    //   .parents(conf.parentTrigger)
+    //   .children(conf.triggerElement)
+    //   .attr('aria-expanded', 'true'); // add attribute aria-expanded=true the triggers of all parents
+
+    // Util.addClass(
     //   Util.children(
-    //     Util.children(
-    //       el,
-    //       `${conf.parentTrigger}.${ClassName.ACTIVE}`
-    //       ),
-    //     conf.triggerElement
+    //     Util.has(
+    //       ActiveEl,
+    //       conf.subMenu
+    //     ),
+    //     conf.subMenu
     //   ),
-    //   'aria-expanded',
-    //   'true'
-    // )
-    el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
-      .children(conf.triggerElement)
-      .attr('aria-expanded', 'true'); // add attribute aria-expanded=true the trigger element
-
-    el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
-      .parents(conf.parentTrigger)
-      .addClass(ClassName.ACTIVE);
-
-    el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
-      .parents(conf.parentTrigger)
-      .children(conf.triggerElement)
-      .attr('aria-expanded', 'true'); // add attribute aria-expanded=true the triggers of all parents
+    //   `${ClassName.COLLAPSE} ${ClassName.SHOW}`
+    // );
 
     el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
       .has(conf.subMenu)

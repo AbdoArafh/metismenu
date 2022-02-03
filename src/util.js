@@ -1,9 +1,5 @@
 import $ from 'jquery';
 
-// function flattenArray(arr) {
-//   return [].concat(...arr);
-// }
-
 const Util = (($) => { // eslint-disable-line no-shadow
   const TRANSITION_END = 'transitionend';
 
@@ -18,16 +14,61 @@ const Util = (($) => { // eslint-disable-line no-shadow
       return Boolean(TRANSITION_END);
     },
 
-    flattenArray(arr) {
-      return [].concat(...arr);
+    compareStrings(a, b) {
+      if (a === undefined) return false;
+      return a.toLowerCase() === b.toLowerCase();
     },
 
-    children(elements, query="*") {
+    flattenArray(arr) {
+      const flatArray = [];
+      arr = Array.from(arr);
+      for (let i = 0; i < arr.length; i++) {
+        flatArray.push(...Array.from(arr[i]));
+      }
+      return flatArray;
+    },
+
+    children(elements, query) {
+      // matches the query to capture tagName
+      // and other properties from it
+      const matcher = /(\w+)(?:#(\w+))*(?:\.([A-Za-z\-]+))*/;
+      const matches = matcher.exec(query);
+      const [, tagName, id, className] = matches;
+
+      if (!elements instanceof Array)
+        elements = Array.from(elements);
+
+      return this.flattenArray(
+        Array.from(elements).map(element => element.children)
+        ).filter(
+        el => {
+          // check if this is the wanted element
+          let isMatching = this.compareStrings(el.tagName, tagName);
+          if (id && isMatching)
+            isMatching = el.id === id;
+          if (className && isMatching)
+            isMatching = el.classList.contains(className);
+          return isMatching;
+        }
+      );
+    },
+
+    find(elements, query="*") {
       return this.flattenArray(
         Array.from(elements).map(element => (
           Array.from(element.querySelectorAll(query))
         ))
       );
+    },
+
+    parents(elements, tagName) {
+      const parentNodes = [];
+      Array.from(elements).forEach(element => {
+        for (let current = element; current.parentElement; current = current.parentElement) {
+          parentNodes.push(current.parentElement);
+        }
+      });
+      return parentNodes.filter((el) => this.compareStrings(el.tagName, tagName));
     },
 
     hasClass(elements, className) {
@@ -44,6 +85,15 @@ const Util = (($) => { // eslint-disable-line no-shadow
 
     attr(elements, key, value) {
       elements.forEach(el => el.setAttribute(key, value));
+    },
+
+    has(elements, query) {
+      return Array.from(elements)
+        .filter(
+          element => (
+            element.querySelectorAll(query).length > 0
+          )
+        )
     }
   };
 
