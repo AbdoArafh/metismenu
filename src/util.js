@@ -13,6 +13,15 @@ const Util = (($) => { // eslint-disable-line no-shadow
     supportsTransitionEnd() {
       return Boolean(TRANSITION_END);
     },
+
+    children(element, target) {
+      // todo make it deal with more than one element
+      return Array.from(element.querySelectorAll(target));
+    },
+
+    hasClass(elements, className) {
+      return elements.every(el => el.classList.contains(className));
+    }
   };
 
   function getSpecialTransitionEndEvent() {

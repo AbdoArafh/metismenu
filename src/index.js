@@ -116,16 +116,20 @@ class MetisMenu {
   }
 
   setActive(li) {
-    $(li).addClass(ClassName.ACTIVE);
-    const ul = $(li).children(this.config.subMenu);
-    if (ul.length > 0 && !ul.hasClass(ClassName.SHOW)) {
+    // todo change this li[0]
+
+    li[0].classList.add(ClassName.ACTIVE);
+    const ul = Util.children(li[0], this.config.subMenu);
+    if (ul.length > 0 && !Util.hasClass(ul, ClassName.SHOW)) {
       this.show(ul);
     }
   }
 
   removeActive(li) {
-    $(li).removeClass(ClassName.ACTIVE);
-    const ul = $(li).children(`${this.config.subMenu}.${ClassName.SHOW}`);
+    // todo change this li[0]
+    
+    li[0].classList.remove(ClassName.ACTIVE);
+    const ul = Util.children(li[0], `${this.config.subMenu}.${ClassName.SHOW}`)
     if (ul.length > 0) {
       this.hide(ul);
     }
