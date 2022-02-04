@@ -141,6 +141,20 @@ class MetisMenu {
     //   .children(conf.subMenu)
     //   .addClass(ClassName.COLLAPSE);
 
+    // Util.on(
+    //   Util.children(
+    //     Util.find(
+    //       el,
+    //       conf.parentTrigger
+    //     ),
+    //     conf.triggerElement
+    //   ),
+    //   Event.CLICK_DATA_API,
+    //   function (e) {
+
+    //   }
+    // );
+
     el
       .find(conf.parentTrigger)
       // .has(conf.subMenu)
