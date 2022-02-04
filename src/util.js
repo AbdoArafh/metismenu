@@ -28,29 +28,41 @@ const Util = (($) => { // eslint-disable-line no-shadow
       return flatArray;
     },
 
+    matcher(query) {
+      const matcher = /(\w+)?(?:#(\w+))*(?:\.([A-Za-z\-]+))*/;
+      const matches = matcher.exec(query);
+      return matches;
+    },
+
+    isMatching(el, tagName, id, className) {
+      // check if this is the wanted element
+      // TODO find another solution
+      // let isMatching = this.compareStrings(el.tagName, tagName);
+      let isMatching;
+      if (tagName)
+        isMatching = this.compareStrings(el.tagName, tagName);
+      else
+        isMatching = true;
+      if (id && isMatching)
+        isMatching = el.id === id;
+      if (className && isMatching)
+        isMatching = el.classList.contains(className);
+      return isMatching;
+    },
+
     children(elements, query) {
       // matches the query to capture tagName
       // and other properties from it
-      const matcher = /(\w+)(?:#(\w+))*(?:\.([A-Za-z\-]+))*/;
-      const matches = matcher.exec(query);
-      const [, tagName, id, className] = matches;
+      
+      const [, tagName, id, className] = this.matcher(query);
 
-      if (!elements instanceof Array)
+      if (!(elements instanceof Array))
         elements = Array.from(elements);
 
       return this.flattenArray(
         Array.from(elements).map(element => element.children)
-        ).filter(
-        el => {
-          // check if this is the wanted element
-          let isMatching = this.compareStrings(el.tagName, tagName);
-          if (id && isMatching)
-            isMatching = el.id === id;
-          if (className && isMatching)
-            isMatching = el.classList.contains(className);
-          return isMatching;
-        }
-      );
+        )
+        .filter(el => this.isMatching(el, tagName, id, className));
     },
 
     find(elements, query="*") {
@@ -72,15 +84,39 @@ const Util = (($) => { // eslint-disable-line no-shadow
     },
 
     hasClass(elements, className) {
-      return elements.every(el => el.classList.contains(className));
+      // todo make it work with multiple classes
+      return elements.some(el => el.classList.contains(className));
     },
 
-    addClass(elements, className) {
-      Array.from(elements).forEach(el => el.classList.add(className));
+    addClass(elements, classNames) {
+      Array.from(elements).forEach(el => {
+        const classes = classNames.split(" ");
+        classes.forEach(c => el.classList.add(c));
+      });
     },
 
     removeClass(elements, className) {
+      // todo make it work with multiple classes
       Array.from(elements).forEach(el => el.classList.remove(className));
+    },
+
+    not(elements, criteria) {
+      if (!(elements instanceof Array)) {
+        if (elements.length)
+          elements = Array.from(elements);
+        else
+          elements = [elements]
+      }
+      if (criteria instanceof HTMLElement) {
+        return elements.filter(el => el !== criteria);
+      }
+      if (typeof criteria === "string") {
+        const [, tagName, id, className] = this.matcher(criteria);
+        return elements.filter(
+          el => !this.isMatching(el, tagName, id, className)
+        );
+      }
+      return [];
     },
 
     attr(elements, key, value) {
