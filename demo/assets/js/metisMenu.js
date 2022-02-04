@@ -234,7 +234,8 @@
         ClassName.ACTIVE
       );
 
-      // TODO (proposal) el.prototype = Object.assign(el.prototype || {}, Util);
+      // *TODO* (proposal) el.prototype = Object.assign(el.prototype || {}, Util);
+      // *TODO* (proposal) HTMLElement.prototype = Object.assign(HTMLElement.prototype, Util);
           
       // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
       //   .parents(conf.parentTrigger)
