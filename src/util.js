@@ -28,8 +28,18 @@ const Util = (($) => { // eslint-disable-line no-shadow
       return flatArray;
     },
 
+    handleNonArrays(elements) {
+      if (!(elements instanceof Array)) {
+        if (elements.length)
+          return Array.from(elements);
+        else
+          return [elements]
+      }
+      return elements
+    },
+
     matcher(query) {
-      const matcher = /(\w+)?(?:#(\w+))*(?:\.([A-Za-z\-]+))*/;
+      const matcher = /(\*|\w+)?(?:#(\w+))*(?:\.([A-Za-z\-]+))*/;
       const matches = matcher.exec(query);
       return matches;
     },
@@ -39,7 +49,7 @@ const Util = (($) => { // eslint-disable-line no-shadow
       // TODO find another solution
       // let isMatching = this.compareStrings(el.tagName, tagName);
       let isMatching;
-      if (tagName)
+      if (tagName && tagName !== "*")
         isMatching = this.compareStrings(el.tagName, tagName);
       else
         isMatching = true;
@@ -48,6 +58,63 @@ const Util = (($) => { // eslint-disable-line no-shadow
       if (className && isMatching)
         isMatching = el.classList.contains(className);
       return isMatching;
+    },
+
+    isMatchingCriteria(element, criteria) {
+      if (criteria instanceof HTMLElement) {
+        return element === criteria;
+      }
+      if (typeof criteria === "string") {
+        const [, tagName, id, className] = this.matcher(criteria);
+        return this.isMatching(element, tagName, id, className);
+      }
+      return false;
+    },
+
+    parent(elements, criteria) {
+      elements = this.handleNonArrays(elements);
+
+      if (!criteria) {
+        return elements.map(element => element.parentElement)
+      }
+
+      return elements.map(
+        element => {
+          if (this.isMatchingCriteria(element.parentElement, criteria))
+            return element.parentElement
+        }
+      ).filter(el => el);
+    },
+
+    parents(elements, tagName) {
+      const parentNodes = [];
+      Array.from(elements).forEach(element => {
+        for (let current = element; current.parentElement; current = current.parentElement) {
+          parentNodes.push(current.parentElement);
+        }
+      });
+      return parentNodes.filter((el) => this.compareStrings(el.tagName, tagName));
+    },
+
+    siblings(elements, criteria) {
+      elements = this.handleNonArrays(elements);
+      
+      if (!criteria) {
+        return this.flattenArray(
+          elements.map(
+            element => Array.from(element.parentElement.children).filter(el => el !== element)
+          )
+        );
+      }
+
+      return this.flattenArray(
+        elements.map(
+          element => Array
+            .from(element.parentElement.children)
+            .filter(el => el !== element)
+            .filter(el => this.isMatchingCriteria(el, criteria))
+        )
+      );
     },
 
     children(elements, query) {
@@ -73,16 +140,6 @@ const Util = (($) => { // eslint-disable-line no-shadow
       );
     },
 
-    parents(elements, tagName) {
-      const parentNodes = [];
-      Array.from(elements).forEach(element => {
-        for (let current = element; current.parentElement; current = current.parentElement) {
-          parentNodes.push(current.parentElement);
-        }
-      });
-      return parentNodes.filter((el) => this.compareStrings(el.tagName, tagName));
-    },
-
     hasClass(elements, className) {
       // todo make it work with multiple classes
       return elements.some(el => el.classList.contains(className));
@@ -101,12 +158,7 @@ const Util = (($) => { // eslint-disable-line no-shadow
     },
 
     not(elements, criteria) {
-      if (!(elements instanceof Array)) {
-        if (elements.length)
-          elements = Array.from(elements);
-        else
-          elements = [elements]
-      }
+      elements = this.handleNonArrays(elements);
       if (criteria instanceof HTMLElement) {
         return elements.filter(el => el !== criteria);
       }
@@ -130,6 +182,21 @@ const Util = (($) => { // eslint-disable-line no-shadow
             element.querySelectorAll(query).length > 0
           )
         )
+    },
+
+    onEvent(elements, event, func, once) {
+      elements = this.handleNonArrays(elements);
+      elements.forEach(element =>
+        element.addEventListener(event, func, {once})
+      )
+    },
+
+    on(elements, event, func) {
+      this.onEvent(elements, event, func, false);
+    },
+
+    one(elements, event, func) {
+      this.onEvent(elements, event, func, true);
     }
   };
 
