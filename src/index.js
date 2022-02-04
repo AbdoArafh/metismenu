@@ -104,28 +104,42 @@ class MetisMenu {
     //   .children(conf.triggerElement)
     //   .attr('aria-expanded', 'true'); // add attribute aria-expanded=true the triggers of all parents
 
-    // Util.addClass(
-    //   Util.children(
-    //     Util.has(
-    //       ActiveEl,
-    //       conf.subMenu
-    //     ),
-    //     conf.subMenu
-    //   ),
-    //   `${ClassName.COLLAPSE} ${ClassName.SHOW}`
-    // );
+    Util.addClass(
+      Util.children(
+        Util.has(
+          ActiveEl,
+          conf.subMenu
+        ),
+        conf.subMenu
+      ),
+      `${ClassName.COLLAPSE} ${ClassName.SHOW}`
+    );
 
-    el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
-      .has(conf.subMenu)
-      .children(conf.subMenu)
-      .addClass(`${ClassName.COLLAPSE} ${ClassName.SHOW}`);
+    // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
+    //   .has(conf.subMenu)
+    //   .children(conf.subMenu)
+    //   .addClass(`${ClassName.COLLAPSE} ${ClassName.SHOW}`);
 
-    el
-      .find(conf.parentTrigger)
-      .not(`.${ClassName.ACTIVE}`)
-      .has(conf.subMenu)
-      .children(conf.subMenu)
-      .addClass(ClassName.COLLAPSE);
+    Util.addClass(
+      Util.children(
+        Util.not(
+          Util.find(
+            el,
+            conf.parentTrigger
+          ),
+          `.${ClassName.ACTIVE}`
+        ),
+        conf.subMenu
+      ),
+      ClassName.COLLAPSE
+    );
+
+    // el
+    //   .find(conf.parentTrigger)
+    //   .not(`.${ClassName.ACTIVE}`)
+    //   .has(conf.subMenu)
+    //   .children(conf.subMenu)
+    //   .addClass(ClassName.COLLAPSE);
 
     el
       .find(conf.parentTrigger)
