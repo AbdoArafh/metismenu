@@ -155,9 +155,15 @@
         );
       },
 
-      hasClass(elements, className) {
-        // todo make it work with multiple classes
-        return elements.some(el => el.classList.contains(className));
+      hasClass(elements, classNames) {
+        classNames = classNames.split(" ");
+        return elements.some(
+          el =>
+            classNames.every(
+              className =>
+                el.classList.contains(className)
+            )
+        );
       },
 
       addClass(elements, classNames) {
@@ -167,9 +173,13 @@
         });
       },
 
-      removeClass(elements, className) {
-        // todo make it work with multiple classes
-        Array.from(elements).forEach(el => el.classList.remove(className));
+      removeClass(elements, classNames) {
+        classNames = classNames.split(" ");
+        Array.from(elements).forEach(el => {
+          classNames.forEach(
+            className => el.classList.remove(className)
+          );
+        });
       },
 
       not(elements, criteria) {
@@ -187,6 +197,8 @@
       },
 
       attr(elements, key, value) {
+        elements = this.handleNonArrays(elements);
+        if (!value) return elements[0][key];
         elements.forEach(el => el.setAttribute(key, value));
       },
 
@@ -199,19 +211,21 @@
           )
       },
 
-      onEvent(elements, event, func, once) {
+      onEvent(elements, event, handler, once) {
+        // TODO add the specifer
         elements = this.handleNonArrays(elements);
+        const eventType = event.split(".")[0];
         elements.forEach(element =>
-          element.addEventListener(event, func, {once})
+          element.addEventListener(eventType, handler, {once})
         );
       },
 
-      on(elements, event, func) {
-        this.onEvent(elements, event, func, false);
+      on(elements, event, handler) {
+        this.onEvent(elements, event, handler, false);
       },
 
-      one(elements, event, func) {
-        this.onEvent(elements, event, func, true);
+      one(elements, event, handler) {
+        this.onEvent(elements, event, handler, true);
       }
     };
 
@@ -336,9 +350,6 @@
         ),
         ClassName.ACTIVE
       );
-
-      // *TODO* (proposal) el.prototype = Object.assign(el.prototype || {}, Util);
-      // *TODO* (proposal) HTMLElement.prototype = Object.assign(HTMLElement.prototype, Util);
           
       // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
       //   .parents(conf.parentTrigger)
@@ -408,7 +419,35 @@
       //   ),
       //   Event.CLICK_DATA_API,
       //   function (e) {
+      //     const eTar = $(this);
 
+      //     if (eTar.attr('aria-disabled') === 'true') {
+      //       return;
+      //     }
+
+      //     if (conf.preventDefault && eTar.attr('href') === '#') {
+      //       e.preventDefault();
+      //     }
+
+      //     const paRent = eTar.parent(conf.parentTrigger);
+      //     const sibLi = paRent.siblings(conf.parentTrigger);
+      //     const sibTrigger = sibLi.children(conf.triggerElement);
+
+      //     if (paRent.hasClass(ClassName.ACTIVE)) {
+      //       eTar.attr('aria-expanded', 'false');
+      //       self.removeActive(paRent);
+      //     } else {
+      //       eTar.attr('aria-expanded', 'true');
+      //       self.setActive(paRent);
+      //       if (conf.toggle) {
+      //         self.removeActive(sibLi);
+      //         sibTrigger.attr('aria-expanded', 'false');
+      //       }
+      //     }
+
+      //     if (conf.onTransitionStart) {
+      //       conf.onTransitionStart(e);
+      //     }
       //   }
       // );
 

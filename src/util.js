@@ -140,9 +140,15 @@ const Util = (($) => { // eslint-disable-line no-shadow
       );
     },
 
-    hasClass(elements, className) {
-      // todo make it work with multiple classes
-      return elements.some(el => el.classList.contains(className));
+    hasClass(elements, classNames) {
+      classNames = classNames.split(" ");
+      return elements.some(
+        el =>
+          classNames.every(
+            className =>
+              el.classList.contains(className)
+          )
+      );
     },
 
     addClass(elements, classNames) {
@@ -152,9 +158,13 @@ const Util = (($) => { // eslint-disable-line no-shadow
       });
     },
 
-    removeClass(elements, className) {
-      // todo make it work with multiple classes
-      Array.from(elements).forEach(el => el.classList.remove(className));
+    removeClass(elements, classNames) {
+      classNames = classNames.split(" ");
+      Array.from(elements).forEach(el => {
+        classNames.forEach(
+          className => el.classList.remove(className)
+        )
+      });
     },
 
     not(elements, criteria) {
@@ -172,6 +182,8 @@ const Util = (($) => { // eslint-disable-line no-shadow
     },
 
     attr(elements, key, value) {
+      elements = this.handleNonArrays(elements);
+      if (!value) return elements[0][key];
       elements.forEach(el => el.setAttribute(key, value));
     },
 
@@ -184,19 +196,21 @@ const Util = (($) => { // eslint-disable-line no-shadow
         )
     },
 
-    onEvent(elements, event, func, once) {
+    onEvent(elements, event, handler, once) {
+      // TODO add the specifer
       elements = this.handleNonArrays(elements);
+      const eventType = event.split(".")[0];
       elements.forEach(element =>
-        element.addEventListener(event, func, {once})
+        element.addEventListener(eventType, handler, {once})
       )
     },
 
-    on(elements, event, func) {
-      this.onEvent(elements, event, func, false);
+    on(elements, event, handler) {
+      this.onEvent(elements, event, handler, false);
     },
 
-    one(elements, event, func) {
-      this.onEvent(elements, event, func, true);
+    one(elements, event, handler) {
+      this.onEvent(elements, event, handler, true);
     }
   };
 

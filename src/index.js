@@ -79,9 +79,6 @@ class MetisMenu {
       ),
       ClassName.ACTIVE
     );
-
-    // *TODO* (proposal) el.prototype = Object.assign(el.prototype || {}, Util);
-    // *TODO* (proposal) HTMLElement.prototype = Object.assign(HTMLElement.prototype, Util);
         
     // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
     //   .parents(conf.parentTrigger)
@@ -151,7 +148,35 @@ class MetisMenu {
     //   ),
     //   Event.CLICK_DATA_API,
     //   function (e) {
+    //     const eTar = $(this);
 
+    //     if (eTar.attr('aria-disabled') === 'true') {
+    //       return;
+    //     }
+
+    //     if (conf.preventDefault && eTar.attr('href') === '#') {
+    //       e.preventDefault();
+    //     }
+
+    //     const paRent = eTar.parent(conf.parentTrigger);
+    //     const sibLi = paRent.siblings(conf.parentTrigger);
+    //     const sibTrigger = sibLi.children(conf.triggerElement);
+
+    //     if (paRent.hasClass(ClassName.ACTIVE)) {
+    //       eTar.attr('aria-expanded', 'false');
+    //       self.removeActive(paRent);
+    //     } else {
+    //       eTar.attr('aria-expanded', 'true');
+    //       self.setActive(paRent);
+    //       if (conf.toggle) {
+    //         self.removeActive(sibLi);
+    //         sibTrigger.attr('aria-expanded', 'false');
+    //       }
+    //     }
+
+    //     if (conf.onTransitionStart) {
+    //       conf.onTransitionStart(e);
+    //     }
     //   }
     // );
 
