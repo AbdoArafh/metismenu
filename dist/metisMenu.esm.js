@@ -221,6 +221,14 @@ const Util = (($) => { // eslint-disable-line no-shadow
 
     one(elements, event, handler) {
       this.onEvent(elements, event, handler, true);
+    },
+
+    off(elements, event) {
+      elements = this.handleNonArrays(elements);
+      const eventType = event.split(".")[0];
+      elements.forEach(
+        element => element.removeEventListener(eventType, () => {})
+      );
     }
   };
 
@@ -230,6 +238,7 @@ const Util = (($) => { // eslint-disable-line no-shadow
       delegateType: TRANSITION_END,
       handle(event) {
         if ($(event.target).is(this)) {
+          console.log(this, arguments);
           return event
             .handleObj
             .handler
