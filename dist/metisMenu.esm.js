@@ -52,7 +52,6 @@ const Util = (($) => { // eslint-disable-line no-shadow
     },
 
     isMatching(el, tagName, id, className) {
-      // check if this is the wanted element
       // TODO find another solution
       // let isMatching = this.compareStrings(el.tagName, tagName);
       let isMatching;
@@ -95,7 +94,8 @@ const Util = (($) => { // eslint-disable-line no-shadow
 
     parents(elements, tagName) {
       const parentNodes = [];
-      Array.from(elements).forEach(element => {
+      elements = this.handleNonArrays(elements);
+      elements.forEach(element => {
         for (let current = element; current.parentElement; current = current.parentElement) {
           parentNodes.push(current.parentElement);
         }
@@ -130,8 +130,7 @@ const Util = (($) => { // eslint-disable-line no-shadow
       
       const [, tagName, id, className] = this.matcher(query);
 
-      if (!(elements instanceof Array))
-        elements = Array.from(elements);
+      elements = this.handleNonArrays(elements);
 
       return this.flattenArray(
         Array.from(elements).map(element => element.children)
@@ -140,6 +139,7 @@ const Util = (($) => { // eslint-disable-line no-shadow
     },
 
     find(elements, query="*") {
+      elements = this.handleNonArrays(elements);
       return this.flattenArray(
         Array.from(elements).map(element => (
           Array.from(element.querySelectorAll(query))
@@ -148,6 +148,7 @@ const Util = (($) => { // eslint-disable-line no-shadow
     },
 
     hasClass(elements, classNames) {
+      elements = this.handleNonArrays(elements);
       classNames = classNames.split(" ");
       return elements.some(
         el =>
@@ -159,7 +160,8 @@ const Util = (($) => { // eslint-disable-line no-shadow
     },
 
     addClass(elements, classNames) {
-      Array.from(elements).forEach(el => {
+      elements = this.handleNonArrays(elements);
+      elements.forEach(el => {
         const classes = classNames.split(" ");
         classes.forEach(c => el.classList.add(c));
       });
@@ -167,7 +169,8 @@ const Util = (($) => { // eslint-disable-line no-shadow
 
     removeClass(elements, classNames) {
       classNames = classNames.split(" ");
-      Array.from(elements).forEach(el => {
+      elements = this.handleNonArrays(elements);
+      elements.forEach(el => {
         classNames.forEach(
           className => el.classList.remove(className)
         );
@@ -190,13 +193,13 @@ const Util = (($) => { // eslint-disable-line no-shadow
 
     attr(elements, key, value) {
       elements = this.handleNonArrays(elements);
-      if (!value) return elements[0][key];
+      if (!value) return elements[0].getAttribute(key);
       elements.forEach(el => el.setAttribute(key, value));
     },
 
     has(elements, query) {
-      return Array.from(elements)
-        .filter(
+      elements = this.handleNonArrays(elements);
+      return elements.filter(
           element => (
             element.querySelectorAll(query).length > 0
           )
@@ -312,7 +315,9 @@ class MetisMenu {
   init() {
     const self = this;
     const conf = this.config;
-    const el = $(this.element);
+    const el = this.element;
+
+    // const el = $(this.element);
 
     Util.addClass(el, ClassName.METIS);
 
@@ -401,16 +406,54 @@ class MetisMenu {
     //   .children(conf.subMenu)
     //   .addClass(ClassName.COLLAPSE);
 
-    // Util.on(
-    //   Util.children(
-    //     Util.find(
-    //       el,
-    //       conf.parentTrigger
-    //     ),
-    //     conf.triggerElement
-    //   ),
-    //   Event.CLICK_DATA_API,
-    //   function (e) {
+    Util.on(
+      Util.children(
+        Util.find(
+          el,
+          conf.parentTrigger
+        ),
+        conf.triggerElement
+      ),
+      Event.CLICK_DATA_API,
+      function (e) {
+        // eTar is eventTarget
+        const eTar = e.target;
+
+        if (Util.attr(eTar, 'aria-disabled') === 'true') {
+          return;
+        }
+
+        if (conf.preventDefault && Util.attr(eTar, 'href') === '#') {
+          e.preventDefault();
+        }
+
+        const paRent = Util.parent(eTar, conf.parentTrigger);
+        const sibLi = Util.siblings(paRent, conf.parentTrigger);
+        const sibTrigger = Util.children(sibLi, conf.triggerElement);
+
+        if (Util.hasClass(paRent, ClassName.ACTIVE)) {
+          Util.attr(eTar, 'aria-expanded', 'false');
+          self.removeActive(paRent);
+        } else {
+          Util.attr(eTar, 'aria-expanded', 'true');
+          self.setActive(paRent);
+          if (conf.toggle) {
+            self.removeActive(sibLi);
+            Util.attr(sibTrigger, 'aria-expanded', 'false');
+          }
+        }
+
+        if (conf.onTransitionStart) {
+          conf.onTransitionStart(e);
+        }
+      }
+    );
+
+    // el
+    //   .find(conf.parentTrigger)
+    //   // .has(conf.subMenu)
+    //   .children(conf.triggerElement)
+    //   .on(Event.CLICK_DATA_API, function (e) { // eslint-disable-line func-names
     //     const eTar = $(this);
 
     //     if (eTar.attr('aria-disabled') === 'true') {
@@ -440,44 +483,7 @@ class MetisMenu {
     //     if (conf.onTransitionStart) {
     //       conf.onTransitionStart(e);
     //     }
-    //   }
-    // );
-
-    el
-      .find(conf.parentTrigger)
-      // .has(conf.subMenu)
-      .children(conf.triggerElement)
-      .on(Event.CLICK_DATA_API, function (e) { // eslint-disable-line func-names
-        const eTar = $(this);
-
-        if (eTar.attr('aria-disabled') === 'true') {
-          return;
-        }
-
-        if (conf.preventDefault && eTar.attr('href') === '#') {
-          e.preventDefault();
-        }
-
-        const paRent = eTar.parent(conf.parentTrigger);
-        const sibLi = paRent.siblings(conf.parentTrigger);
-        const sibTrigger = sibLi.children(conf.triggerElement);
-
-        if (paRent.hasClass(ClassName.ACTIVE)) {
-          eTar.attr('aria-expanded', 'false');
-          self.removeActive(paRent);
-        } else {
-          eTar.attr('aria-expanded', 'true');
-          self.setActive(paRent);
-          if (conf.toggle) {
-            self.removeActive(sibLi);
-            sibTrigger.attr('aria-expanded', 'false');
-          }
-        }
-
-        if (conf.onTransitionStart) {
-          conf.onTransitionStart(e);
-        }
-      });
+    //   });
   }
 
   setActive(li) {
