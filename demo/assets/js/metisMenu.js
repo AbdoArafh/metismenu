@@ -594,6 +594,10 @@
 
       this.setTransitioning(true);
 
+      window.$ = $__default["default"];
+
+      this.dispose();
+
       const complete = () => {
         // check if disposed
         if (!this.config || !this.element) {
@@ -606,9 +610,12 @@
         this.setTransitioning(false);
         elem.trigger(Event.HIDDEN);
 
-        elem
-          .removeClass(ClassName.COLLAPSING)
-          .addClass(ClassName.COLLAPSE);
+        Util.removeClass(elem, ClassName.COLLAPSING);
+        Util.addClass(elem, ClassName.COLLAPSE);
+
+        // elem
+        //   .removeClass(ClassName.COLLAPSING)
+        //   .addClass(ClassName.COLLAPSE);
       };
 
       if (elem.height() === 0 || elem.css('display') === 'none') {
@@ -626,7 +633,7 @@
     }
 
     dispose() {
-      $__default["default"].removeData(this.element, DATA_KEY);
+      $__default["default"](this.element).removeData(DATA_KEY); 
 
       $__default["default"](this.element)
         .find(this.config.parentTrigger)

@@ -586,6 +586,10 @@ class MetisMenu {
 
     this.setTransitioning(true);
 
+    window.$ = $;
+
+    this.dispose();
+
     const complete = () => {
       // check if disposed
       if (!this.config || !this.element) {
@@ -598,9 +602,12 @@ class MetisMenu {
       this.setTransitioning(false);
       elem.trigger(Event.HIDDEN);
 
-      elem
-        .removeClass(ClassName.COLLAPSING)
-        .addClass(ClassName.COLLAPSE);
+      Util.removeClass(elem, ClassName.COLLAPSING);
+      Util.addClass(elem, ClassName.COLLAPSE);
+
+      // elem
+      //   .removeClass(ClassName.COLLAPSING)
+      //   .addClass(ClassName.COLLAPSE);
     };
 
     if (elem.height() === 0 || elem.css('display') === 'none') {
@@ -618,7 +625,7 @@ class MetisMenu {
   }
 
   dispose() {
-    $.removeData(this.element, DATA_KEY);
+    $(this.element).removeData(DATA_KEY); 
 
     $(this.element)
       .find(this.config.parentTrigger)
