@@ -311,10 +311,6 @@ class MetisMenu {
 
     this.setTransitioning(true);
 
-    window.$ = $;
-
-    this.dispose();
-
     const complete = () => {
       // check if disposed
       if (!this.config || !this.element) {
@@ -350,13 +346,25 @@ class MetisMenu {
   }
 
   dispose() {
-    $(this.element).removeData(DATA_KEY); 
+    Util.removeData(this.element, DATA_KEY);
+    // $(this.element).removeData(DATA_KEY); 
 
-    $(this.element)
-      .find(this.config.parentTrigger)
-      // .has(this.config.subMenu)
-      .children(this.config.triggerElement)
-      .off(Event.CLICK_DATA_API);
+    Util.off(
+      Util.children(
+        Util.find(
+          this.element,
+          this.config.parentTrigger
+        ),
+        this.config.triggerElement
+      ),
+      Event.CLICK_DATA_API
+    );
+
+    // $(this.element)
+    //   .find(this.config.parentTrigger)
+    //   // .has(this.config.subMenu)
+    //   .children(this.config.triggerElement)
+    //   .off(Event.CLICK_DATA_API);
 
     this.transitioning = null;
     this.config = null;

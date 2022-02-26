@@ -200,12 +200,15 @@ const Util = (($) => { // eslint-disable-line no-shadow
     },
 
     onEvent(elements, event, handler, once) {
-      // TODO add the specifer
       elements = this.handleNonArrays(elements);
       const eventType = event.split(".")[0];
       elements.forEach(element =>
-        element.addEventListener(eventType, handler, {once})
-      )
+        {
+          element.addEventListener(eventType, handler, {once});
+          // attaches the event handler to the element so it can be refrenced later
+          element[event] = handler;
+        }
+      );
     },
 
     on(elements, event, handler) {
@@ -219,9 +222,45 @@ const Util = (($) => { // eslint-disable-line no-shadow
     off(elements, event) {
       elements = this.handleNonArrays(elements);
       const eventType = event.split(".")[0];
+      // removing the event listener with the custom Event Handler
       elements.forEach(
-        element => element.removeEventListener(eventType, () => {})
-      )
+        element => element.removeEventListener(eventType, element[event])
+      );
+    },
+
+    data(elements, dataKey, dataValue) {
+      elements = this.handleNonArrays(elements);
+      // if a value not given for data it
+      if (!dataKey) {
+        return elements.map(
+          element => element.dataset
+        );
+      }
+
+      if (!dataValue) {
+        return elements.map(
+          element => element.dataset[dataKey]
+        );
+      }
+
+      elements.forEach(
+        element => element.dataset[dataKey] = dataValue
+      );
+    },
+
+    removeData(elements, dataKey) {
+      elements = this.handleNonArrays(elements);
+      if (!dataKey) {
+        elements.map(element => 
+          Object.keys(element.dataset).map(
+            key => delete element.dataset[key]
+          ).every(el => el)
+        ).every(el => el);
+        return true;
+      }
+      return elements.map(
+        element => delete element.dataset[dataKey]
+      ).every(el => el);
     }
   };
 
@@ -231,7 +270,6 @@ const Util = (($) => { // eslint-disable-line no-shadow
       delegateType: TRANSITION_END,
       handle(event) {
         if ($(event.target).is(this)) {
-          console.log(this, arguments);
           return event
             .handleObj
             .handler
