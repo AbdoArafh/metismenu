@@ -6,6 +6,8 @@ const Util = (($) => { // eslint-disable-line no-shadow
   const Util = { // eslint-disable-line no-shadow
     TRANSITION_END: 'mmTransitionEnd',
 
+    EVENT_PREFIX: "mm-",
+
     triggerTransitionEnd(element) {
       $(element).trigger(TRANSITION_END);
     },
@@ -206,7 +208,7 @@ const Util = (($) => { // eslint-disable-line no-shadow
         {
           element.addEventListener(eventType, handler, {once});
           // attaches the event handler to the element so it can be refrenced later
-          element[event] = handler;
+          element[this.EVENT_PREFIX + event] = handler;
         }
       );
     },
@@ -224,7 +226,10 @@ const Util = (($) => { // eslint-disable-line no-shadow
       const eventType = event.split(".")[0];
       // removing the event listener with the custom Event Handler
       elements.forEach(
-        element => element.removeEventListener(eventType, element[event])
+        element => {
+          element.removeEventListener(eventType, element[this.EVENT_PREFIX + event]);
+          delete element[this.EVENT_PREFIX + event];
+        }
       );
     },
 
@@ -261,6 +266,43 @@ const Util = (($) => { // eslint-disable-line no-shadow
       return elements.map(
         element => delete element.dataset[dataKey]
       ).every(el => el);
+    },
+
+    height(elements, newHeight) {
+      /**
+       * When this method is used to return height, it returns the height of the FIRST matched element.
+       * When this method is used to set height, it sets the height of ALL matched elements.
+       */
+      elements = this.handleNonArrays(elements);
+      if (!elements.length) {
+        return;
+      }
+      if (newHeight) {
+        if (typeof newHeight !== "string") {
+          elements.forEach(
+            element => element.style.height = newHeight + "px"
+          )
+        } else {
+          elements.forEach(
+            element => element.style.height = newHeight
+          )
+        }
+        return this.height(elements);
+      }
+      // return height as a number
+      return Number(window.getComputedStyle(elements[0]).height.match(/\d+/)[0]);
+    },
+    
+    css(elements, rule, value) {
+      elements = this.handleNonArrays(elements);
+      if (!elements.length) throw Error("No elements were given");
+      if (!value) {
+        return window.getComputedStyle(elements[0])[rule];
+      }
+      elements.forEach(
+        element => element.style[rule] = value
+      );
+      return elements;
     }
   };
 

@@ -51,6 +51,8 @@ class MetisMenu {
     const conf = this.config;
     const el = this.element;
 
+    window.Util = Util;
+
     // const el = $(this.element);
 
     Util.addClass(el, ClassName.METIS);
@@ -237,11 +239,13 @@ class MetisMenu {
   }
 
   show(element) {
-    if (this.transitioning || $(element).hasClass(ClassName.COLLAPSING)) {
+    if (this.transitioning || Util.hasClass(element, ClassName.COLLAPSING)) {
       return;
     }
+    // todo
     const elem = $(element);
 
+    // todo
     const startEvent = $.Event(Event.SHOW);
     elem.trigger(startEvent);
 
@@ -249,17 +253,31 @@ class MetisMenu {
       return;
     }
 
-    elem.parent(this.config.parentTrigger).addClass(ClassName.ACTIVE);
+    Util.addClass(
+      Util.parent(
+        elem,
+        this.config.parentTrigger
+      ),
+      ClassName.ACTIVE
+    );
 
+    // elem.parent(this.config.parentTrigger).addClass(ClassName.ACTIVE);
+
+    // todo
     if (this.config.toggle) {
       const toggleElem = elem.parent(this.config.parentTrigger).siblings().children(`${this.config.subMenu}.${ClassName.SHOW}`);
-      this.hide(toggleElem);
+      if (toggleElem.length > 0)
+        this.hide(toggleElem);
     }
 
-    elem
-      .removeClass(ClassName.COLLAPSE)
-      .addClass(ClassName.COLLAPSING)
-      .height(0);
+    Util.removeClass(elem, ClassName.COLLAPSE);
+    Util.addClass(elem, ClassName.COLLAPSING);
+    Util.height(elem, 0);
+
+    // elem
+    //   .removeClass(ClassName.COLLAPSE)
+    //   .addClass(ClassName.COLLAPSING)
+    //   .height(0);
 
     this.setTransitioning(true);
 
@@ -268,16 +286,23 @@ class MetisMenu {
       if (!this.config || !this.element) {
         return;
       }
-      elem
-        .removeClass(ClassName.COLLAPSING)
-        .addClass(`${ClassName.COLLAPSE} ${ClassName.SHOW}`)
-        .height('');
+
+      Util.removeClass(elem, ClassName.COLLAPSING);
+      Util.addClass(elem, `${ClassName.COLLAPSE} ${ClassName.SHOW}`);
+      Util.height(elem, "");
+
+      // elem
+      //   .removeClass(ClassName.COLLAPSING)
+      //   .addClass(`${ClassName.COLLAPSE} ${ClassName.SHOW}`)
+      //   .height('');
 
       this.setTransitioning(false);
 
+      // todo
       elem.trigger(Event.SHOWN);
     };
 
+    // todo
     elem
       .height(element[0].scrollHeight)
       .one(Util.TRANSITION_END, complete)
@@ -286,13 +311,16 @@ class MetisMenu {
 
   hide(element) {
     if (
-      this.transitioning || !$(element).hasClass(ClassName.SHOW)
+      this.transitioning ||!Util.hasClass(element, ClassName.SHOW)
+      // this.transitioning || !$(element).hasClass(ClassName.SHOW)
     ) {
       return;
     }
 
+    // todo
     const elem = $(element);
 
+    // todo
     const startEvent = $.Event(Event.HIDE);
     elem.trigger(startEvent);
 
@@ -300,14 +328,28 @@ class MetisMenu {
       return;
     }
 
-    elem.parent(this.config.parentTrigger).removeClass(ClassName.ACTIVE);
+    Util.removeClass(
+      Util.parent(
+        element,
+        this.config.parentTrigger
+      ),
+      ClassName.ACTIVE
+    );
+
+    // elem.parent(this.config.parentTrigger).removeClass(ClassName.ACTIVE);
+
     // eslint-disable-next-line no-unused-expressions
+    // todo
     elem.height(elem.height())[0].offsetHeight;
 
-    elem
-      .addClass(ClassName.COLLAPSING)
-      .removeClass(ClassName.COLLAPSE)
-      .removeClass(ClassName.SHOW);
+    Util.removeClass(element, ClassName.SHOW);
+    Util.removeClass(element, ClassName.COLLAPSE);
+    Util.addClass(element, ClassName.COLLAPSING);
+
+    // elem
+    //   .addClass(ClassName.COLLAPSING)
+    //   .removeClass(ClassName.COLLAPSE)
+    //   .removeClass(ClassName.SHOW);
 
     this.setTransitioning(true);
 
@@ -317,10 +359,12 @@ class MetisMenu {
         return;
       }
       if (this.transitioning && this.config.onTransitionEnd) {
+        // todo
         this.config.onTransitionEnd();
       }
 
       this.setTransitioning(false);
+      // todo add event handler to the element itself and call it when requested
       elem.trigger(Event.HIDDEN);
 
       Util.removeClass(elem, ClassName.COLLAPSING);
@@ -331,9 +375,10 @@ class MetisMenu {
       //   .addClass(ClassName.COLLAPSE);
     };
 
-    if (elem.height() === 0 || elem.css('display') === 'none') {
+    if (Util.height(elem) === 0 || Util.css(elem, "display") === 'none') {
       complete();
     } else {
+      // todo
       elem
         .height(0)
         .one(Util.TRANSITION_END, complete)
