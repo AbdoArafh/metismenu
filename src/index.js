@@ -1,12 +1,10 @@
-import $ from 'jquery';
 import Util from './util';
 
 const NAME = 'metisMenu';
 const DATA_KEY = 'metisMenu';
 const EVENT_KEY = `.${DATA_KEY}`;
 const DATA_API_KEY = '.data-api';
-const JQUERY_NO_CONFLICT = $.fn[NAME];
-const TRANSITION_DURATION = 350;
+// const TRANSITION_DURATION = 350;
 
 const Default = {
   toggle: true,
@@ -22,6 +20,8 @@ const Event = {
   HIDE: `hide${EVENT_KEY}`,
   HIDDEN: `hidden${EVENT_KEY}`,
   CLICK_DATA_API: `click${EVENT_KEY}${DATA_API_KEY}`,
+  // added this as an alternative to mmTransitionEnd
+  TRANSITION_END: `transitionend${EVENT_KEY}`,
 };
 
 const ClassName = {
@@ -51,10 +51,6 @@ class MetisMenu {
     const conf = this.config;
     const el = this.element;
 
-    window.Util = Util;
-
-    // const el = $(this.element);
-
     Util.addClass(el, ClassName.METIS);
 
     const ActiveEl = Util.find(
@@ -70,11 +66,6 @@ class MetisMenu {
       'aria-expanded',
       'true'
     );
-
-    // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
-    //   .children(conf.triggerElement)
-    //   .attr('aria-expanded', 'true'); // add attribute aria-expanded=true the trigger element
-    
     
     Util.addClass(
       Util.parents(
@@ -83,10 +74,6 @@ class MetisMenu {
       ),
       ClassName.ACTIVE
     );
-        
-    // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
-    //   .parents(conf.parentTrigger)
-    //   .addClass(ClassName.ACTIVE);
 
     Util.attr(
       Util.children(
@@ -100,11 +87,6 @@ class MetisMenu {
       "true"
     );
 
-    // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
-    //   .parents(conf.parentTrigger)
-    //   .children(conf.triggerElement)
-    //   .attr('aria-expanded', 'true'); // add attribute aria-expanded=true the triggers of all parents
-
     Util.addClass(
       Util.children(
         Util.has(
@@ -115,11 +97,6 @@ class MetisMenu {
       ),
       `${ClassName.COLLAPSE} ${ClassName.SHOW}`
     );
-
-    // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
-    //   .has(conf.subMenu)
-    //   .children(conf.subMenu)
-    //   .addClass(`${ClassName.COLLAPSE} ${ClassName.SHOW}`);
 
     Util.addClass(
       Util.children(
@@ -134,13 +111,6 @@ class MetisMenu {
       ),
       ClassName.COLLAPSE
     );
-
-    // el
-    //   .find(conf.parentTrigger)
-    //   .not(`.${ClassName.ACTIVE}`)
-    //   .has(conf.subMenu)
-    //   .children(conf.subMenu)
-    //   .addClass(ClassName.COLLAPSE);
 
     Util.on(
       Util.children(
@@ -184,42 +154,6 @@ class MetisMenu {
         }
       }
     );
-
-    // el
-    //   .find(conf.parentTrigger)
-    //   // .has(conf.subMenu)
-    //   .children(conf.triggerElement)
-    //   .on(Event.CLICK_DATA_API, function (e) { // eslint-disable-line func-names
-    //     const eTar = $(this);
-
-    //     if (eTar.attr('aria-disabled') === 'true') {
-    //       return;
-    //     }
-
-    //     if (conf.preventDefault && eTar.attr('href') === '#') {
-    //       e.preventDefault();
-    //     }
-
-    //     const paRent = eTar.parent(conf.parentTrigger);
-    //     const sibLi = paRent.siblings(conf.parentTrigger);
-    //     const sibTrigger = sibLi.children(conf.triggerElement);
-
-    //     if (paRent.hasClass(ClassName.ACTIVE)) {
-    //       eTar.attr('aria-expanded', 'false');
-    //       self.removeActive(paRent);
-    //     } else {
-    //       eTar.attr('aria-expanded', 'true');
-    //       self.setActive(paRent);
-    //       if (conf.toggle) {
-    //         self.removeActive(sibLi);
-    //         sibTrigger.attr('aria-expanded', 'false');
-    //       }
-    //     }
-
-    //     if (conf.onTransitionStart) {
-    //       conf.onTransitionStart(e);
-    //     }
-    //   });
   }
 
   setActive(li) {
@@ -242,16 +176,15 @@ class MetisMenu {
     if (this.transitioning || Util.hasClass(element, ClassName.COLLAPSING)) {
       return;
     }
-    // todo
-    const elem = $(element);
+    const elem = element;
 
     // todo
-    const startEvent = $.Event(Event.SHOW);
-    elem.trigger(startEvent);
+    // const startEvent = $.Event(Event.SHOW);
+    // elem.trigger(startEvent);
 
-    if (startEvent.isDefaultPrevented()) {
-      return;
-    }
+    // if (startEvent.isDefaultPrevented()) {
+    //   return;
+    // }
 
     Util.addClass(
       Util.parent(
@@ -261,11 +194,17 @@ class MetisMenu {
       ClassName.ACTIVE
     );
 
-    // elem.parent(this.config.parentTrigger).addClass(ClassName.ACTIVE);
-
     // todo
     if (this.config.toggle) {
-      const toggleElem = elem.parent(this.config.parentTrigger).siblings().children(`${this.config.subMenu}.${ClassName.SHOW}`);
+      const toggleElem = Util.children(
+        Util.siblings(
+          Util.parent(
+            elem,
+            this.config.parentTrigger
+          )
+        ),
+        `${this.config.subMenu}.${ClassName.SHOW}`
+      );
       if (toggleElem.length > 0)
         this.hide(toggleElem);
     }
@@ -273,11 +212,6 @@ class MetisMenu {
     Util.removeClass(elem, ClassName.COLLAPSE);
     Util.addClass(elem, ClassName.COLLAPSING);
     Util.height(elem, 0);
-
-    // elem
-    //   .removeClass(ClassName.COLLAPSE)
-    //   .addClass(ClassName.COLLAPSING)
-    //   .height(0);
 
     this.setTransitioning(true);
 
@@ -291,22 +225,17 @@ class MetisMenu {
       Util.addClass(elem, `${ClassName.COLLAPSE} ${ClassName.SHOW}`);
       Util.height(elem, "");
 
-      // elem
-      //   .removeClass(ClassName.COLLAPSING)
-      //   .addClass(`${ClassName.COLLAPSE} ${ClassName.SHOW}`)
-      //   .height('');
-
       this.setTransitioning(false);
 
       // todo
-      elem.trigger(Event.SHOWN);
+      // elem.trigger(Event.SHOWN);
     };
 
-    // todo
-    elem
-      .height(element[0].scrollHeight)
-      .one(Util.TRANSITION_END, complete)
-      .mmEmulateTransitionEnd(TRANSITION_DURATION);
+    Array.from(elem).forEach(el => el.style.height = elem[0].scrollHeight + "px");
+    Util.one(elem, Event.TRANSITION_END, complete);
+    
+    // todo for later
+    // elem.mmEmulateTransitionEnd(TRANSITION_DURATION);
   }
 
   hide(element) {
@@ -317,16 +246,15 @@ class MetisMenu {
       return;
     }
 
-    // todo
-    const elem = $(element);
+    const elem =element;
 
     // todo
-    const startEvent = $.Event(Event.HIDE);
-    elem.trigger(startEvent);
+    // const startEvent = $.Event(Event.HIDE);
+    // elem.trigger(startEvent);
 
-    if (startEvent.isDefaultPrevented()) {
-      return;
-    }
+    // if (startEvent.isDefaultPrevented()) {
+    //   return;
+    // }
 
     Util.removeClass(
       Util.parent(
@@ -336,20 +264,13 @@ class MetisMenu {
       ClassName.ACTIVE
     );
 
-    // elem.parent(this.config.parentTrigger).removeClass(ClassName.ACTIVE);
-
     // eslint-disable-next-line no-unused-expressions
-    // todo
-    elem.height(elem.height())[0].offsetHeight;
+    // todo what the hell is this
+    // elem.height(elem.height())[0].offsetHeight;
 
     Util.removeClass(element, ClassName.SHOW);
     Util.removeClass(element, ClassName.COLLAPSE);
     Util.addClass(element, ClassName.COLLAPSING);
-
-    // elem
-    //   .addClass(ClassName.COLLAPSING)
-    //   .removeClass(ClassName.COLLAPSE)
-    //   .removeClass(ClassName.SHOW);
 
     this.setTransitioning(true);
 
@@ -358,31 +279,29 @@ class MetisMenu {
       if (!this.config || !this.element) {
         return;
       }
+
       if (this.transitioning && this.config.onTransitionEnd) {
-        // todo
         this.config.onTransitionEnd();
       }
 
       this.setTransitioning(false);
-      // todo add event handler to the element itself and call it when requested
-      elem.trigger(Event.HIDDEN);
+      // todo for later
+      // elem.trigger(Event.HIDDEN);
 
       Util.removeClass(elem, ClassName.COLLAPSING);
       Util.addClass(elem, ClassName.COLLAPSE);
-
-      // elem
-      //   .removeClass(ClassName.COLLAPSING)
-      //   .addClass(ClassName.COLLAPSE);
     };
 
     if (Util.height(elem) === 0 || Util.css(elem, "display") === 'none') {
       complete();
     } else {
-      // todo
-      elem
-        .height(0)
-        .one(Util.TRANSITION_END, complete)
-        .mmEmulateTransitionEnd(TRANSITION_DURATION);
+
+      // todo rewrite the height method
+      Util.one(elem, Event.TRANSITION_END, complete);
+      Array.from(elem).forEach(el => el.style.height = "0px");
+      
+      // todo for later
+      // elem.mmEmulateTransitionEnd(TRANSITION_DURATION);
     }
   }
 
@@ -392,7 +311,6 @@ class MetisMenu {
 
   dispose() {
     Util.removeData(this.element, DATA_KEY);
-    // $(this.element).removeData(DATA_KEY); 
 
     Util.off(
       Util.children(
@@ -404,12 +322,6 @@ class MetisMenu {
       ),
       Event.CLICK_DATA_API
     );
-
-    // $(this.element)
-    //   .find(this.config.parentTrigger)
-    //   // .has(this.config.subMenu)
-    //   .children(this.config.triggerElement)
-    //   .off(Event.CLICK_DATA_API);
 
     this.transitioning = null;
     this.config = null;
@@ -441,18 +353,5 @@ class MetisMenu {
     });
   }
 }
-/**
- * ------------------------------------------------------------------------
- * jQuery
- * ------------------------------------------------------------------------
- */
 
-$.fn[NAME] = MetisMenu.jQueryInterface; // eslint-disable-line no-param-reassign
-$.fn[NAME].Constructor = MetisMenu; // eslint-disable-line no-param-reassign
-$.fn[NAME].noConflict = () => {
-  // eslint-disable-line no-param-reassign
-  $.fn[NAME] = JQUERY_NO_CONFLICT; // eslint-disable-line no-param-reassign
-  return MetisMenu.jQueryInterface;
-};
-
-export default MetisMenu;
+window.MetisMenu = MetisMenu;

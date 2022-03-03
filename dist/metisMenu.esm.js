@@ -5,363 +5,342 @@
 * @author Osman Nuri Okumus <onokumus@gmail.com> (https://github.com/onokumus)
 * @license: MIT 
 */
-import $ from 'jquery';
+const Util = { // eslint-disable-line no-shadow
+  TRANSITION_END: 'mmTransitionEnd',
 
-const Util = (($) => { // eslint-disable-line no-shadow
-  const TRANSITION_END = 'transitionend';
+  EVENT_PREFIX: "mm-",
 
-  const Util = { // eslint-disable-line no-shadow
-    TRANSITION_END: 'mmTransitionEnd',
+  
+  triggerTransitionEnd(element) {
+    $(element).trigger(TRANSITION_END);
+  },
+  
+  supportsTransitionEnd() {
+    return Boolean(TRANSITION_END);
+  },
+  
+  // todo for later
 
-    EVENT_PREFIX: "mm-",
+  // emulateTransitionEnd(duration) {
+  //   let called = false;
 
-    triggerTransitionEnd(element) {
-      $(element).trigger(TRANSITION_END);
-    },
+  //   $(this).one(Util.TRANSITION_END, () => {
+  //     called = true;
+  //   });
 
-    supportsTransitionEnd() {
-      return Boolean(TRANSITION_END);
-    },
+  //   setTimeout(() => {
+  //     if (!called) {
+  //       Util.triggerTransitionEnd(this);
+  //     }
+  //   }, duration);
 
-    compareStrings(a, b) {
-      if (a === undefined) return false;
-      return a.toLowerCase() === b.toLowerCase();
-    },
+  //   return this;
+  // },
 
-    flattenArray(arr) {
-      const flatArray = [];
-      arr = Array.from(arr);
-      for (let i = 0; i < arr.length; i++) {
-        flatArray.push(...Array.from(arr[i]));
-      }
-      return flatArray;
-    },
+  compareStrings(a, b) {
+    if (a === undefined) return false;
+    return a.toLowerCase() === b.toLowerCase();
+  },
 
-    handleNonArrays(elements) {
-      if (!(elements instanceof Array)) {
-        if (elements.length)
-          return Array.from(elements);
-        else
-          return [elements]
-      }
-      return elements
-    },
+  flattenArray(arr) {
+    const flatArray = [];
+    arr = Array.from(arr);
+    for (let i = 0; i < arr.length; i++) {
+      flatArray.push(...Array.from(arr[i]));
+    }
+    return flatArray;
+  },
 
-    matcher(query) {
-      const matcher = /(\*|\w+)?(?:#(\w+))*(?:\.([A-Za-z\-]+))*/;
-      const matches = matcher.exec(query);
-      return matches;
-    },
-
-    isMatching(el, tagName, id, className) {
-      // TODO find another solution
-      // let isMatching = this.compareStrings(el.tagName, tagName);
-      let isMatching;
-      if (tagName && tagName !== "*")
-        isMatching = this.compareStrings(el.tagName, tagName);
+  handleNonArrays(elements) {
+    if (!(elements instanceof Array)) {
+      if (elements.length)
+        return Array.from(elements);
       else
-        isMatching = true;
-      if (id && isMatching)
-        isMatching = el.id === id;
-      if (className && isMatching)
-        isMatching = el.classList.contains(className);
-      return isMatching;
-    },
+        return [elements]
+    }
+    return elements
+  },
 
-    isMatchingCriteria(element, criteria) {
-      if (criteria instanceof HTMLElement) {
-        return element === criteria;
+  matcher(query) {
+    const matcher = /(\*|\w+)?(?:#(\w+))*(?:\.([A-Za-z\-]+))*/;
+    const matches = matcher.exec(query);
+    return matches;
+  },
+
+  isMatching(el, tagName, id, className) {
+    // TODO find another solution
+    // let isMatching = this.compareStrings(el.tagName, tagName);
+    let isMatching;
+    if (tagName && tagName !== "*")
+      isMatching = this.compareStrings(el.tagName, tagName);
+    else
+      isMatching = true;
+    if (id && isMatching)
+      isMatching = el.id === id;
+    if (className && isMatching)
+      isMatching = el.classList.contains(className);
+    return isMatching;
+  },
+
+  isMatchingCriteria(element, criteria) {
+    if (criteria instanceof HTMLElement) {
+      return element === criteria;
+    }
+    if (typeof criteria === "string") {
+      const [, tagName, id, className] = this.matcher(criteria);
+      return this.isMatching(element, tagName, id, className);
+    }
+    return false;
+  },
+
+  parent(elements, criteria) {
+    elements = this.handleNonArrays(elements);
+
+    if (!criteria) {
+      return elements.map(element => element.parentElement)
+    }
+
+    return elements.map(
+      element => {
+        if (this.isMatchingCriteria(element.parentElement, criteria))
+          return element.parentElement
       }
-      if (typeof criteria === "string") {
-        const [, tagName, id, className] = this.matcher(criteria);
-        return this.isMatching(element, tagName, id, className);
+    ).filter(el => el);
+  },
+
+  parents(elements, tagName) {
+    const parentNodes = [];
+    elements = this.handleNonArrays(elements);
+    elements.forEach(element => {
+      for (let current = element; current.parentElement; current = current.parentElement) {
+        parentNodes.push(current.parentElement);
       }
-      return false;
-    },
+    });
+    return parentNodes.filter((el) => this.compareStrings(el.tagName, tagName));
+  },
 
-    parent(elements, criteria) {
-      elements = this.handleNonArrays(elements);
-
-      if (!criteria) {
-        return elements.map(element => element.parentElement)
-      }
-
-      return elements.map(
-        element => {
-          if (this.isMatchingCriteria(element.parentElement, criteria))
-            return element.parentElement
-        }
-      ).filter(el => el);
-    },
-
-    parents(elements, tagName) {
-      const parentNodes = [];
-      elements = this.handleNonArrays(elements);
-      elements.forEach(element => {
-        for (let current = element; current.parentElement; current = current.parentElement) {
-          parentNodes.push(current.parentElement);
-        }
-      });
-      return parentNodes.filter((el) => this.compareStrings(el.tagName, tagName));
-    },
-
-    siblings(elements, criteria) {
-      elements = this.handleNonArrays(elements);
-      
-      if (!criteria) {
-        return this.flattenArray(
-          elements.map(
-            element => Array.from(element.parentElement.children).filter(el => el !== element)
-          )
-        );
-      }
-
+  siblings(elements, criteria) {
+    elements = this.handleNonArrays(elements);
+    
+    if (!criteria) {
       return this.flattenArray(
         elements.map(
-          element => Array
-            .from(element.parentElement.children)
-            .filter(el => el !== element)
-            .filter(el => this.isMatchingCriteria(el, criteria))
+          element => Array.from(element.parentElement.children).filter(el => el !== element)
         )
       );
-    },
-
-    children(elements, query) {
-      // matches the query to capture tagName
-      // and other properties from it
-      
-      const [, tagName, id, className] = this.matcher(query);
-
-      elements = this.handleNonArrays(elements);
-
-      return this.flattenArray(
-        Array.from(elements).map(element => element.children)
-        )
-        .filter(el => this.isMatching(el, tagName, id, className));
-    },
-
-    find(elements, query="*") {
-      elements = this.handleNonArrays(elements);
-      return this.flattenArray(
-        Array.from(elements).map(element => (
-          Array.from(element.querySelectorAll(query))
-        ))
-      );
-    },
-
-    hasClass(elements, classNames) {
-      elements = this.handleNonArrays(elements);
-      classNames = classNames.split(" ");
-      return elements.some(
-        el =>
-          classNames.every(
-            className =>
-              el.classList.contains(className)
-          )
-      );
-    },
-
-    addClass(elements, classNames) {
-      elements = this.handleNonArrays(elements);
-      elements.forEach(el => {
-        const classes = classNames.split(" ");
-        classes.forEach(c => el.classList.add(c));
-      });
-    },
-
-    removeClass(elements, classNames) {
-      classNames = classNames.split(" ");
-      elements = this.handleNonArrays(elements);
-      elements.forEach(el => {
-        classNames.forEach(
-          className => el.classList.remove(className)
-        );
-      });
-    },
-
-    not(elements, criteria) {
-      elements = this.handleNonArrays(elements);
-      if (criteria instanceof HTMLElement) {
-        return elements.filter(el => el !== criteria);
-      }
-      if (typeof criteria === "string") {
-        const [, tagName, id, className] = this.matcher(criteria);
-        return elements.filter(
-          el => !this.isMatching(el, tagName, id, className)
-        );
-      }
-      return [];
-    },
-
-    attr(elements, key, value) {
-      elements = this.handleNonArrays(elements);
-      if (!value) return elements[0].getAttribute(key);
-      elements.forEach(el => el.setAttribute(key, value));
-    },
-
-    has(elements, query) {
-      elements = this.handleNonArrays(elements);
-      return elements.filter(
-          element => (
-            element.querySelectorAll(query).length > 0
-          )
-        )
-    },
-
-    onEvent(elements, event, handler, once) {
-      elements = this.handleNonArrays(elements);
-      const eventType = event.split(".")[0];
-      elements.forEach(element =>
-        {
-          element.addEventListener(eventType, handler, {once});
-          // attaches the event handler to the element so it can be refrenced later
-          element[this.EVENT_PREFIX + event] = handler;
-        }
-      );
-    },
-
-    on(elements, event, handler) {
-      this.onEvent(elements, event, handler, false);
-    },
-
-    one(elements, event, handler) {
-      this.onEvent(elements, event, handler, true);
-    },
-
-    off(elements, event) {
-      elements = this.handleNonArrays(elements);
-      const eventType = event.split(".")[0];
-      // removing the event listener with the custom Event Handler
-      elements.forEach(
-        element => {
-          element.removeEventListener(eventType, element[this.EVENT_PREFIX + event]);
-          delete element[this.EVENT_PREFIX + event];
-        }
-      );
-    },
-
-    data(elements, dataKey, dataValue) {
-      elements = this.handleNonArrays(elements);
-      // if a value not given for data it
-      if (!dataKey) {
-        return elements.map(
-          element => element.dataset
-        );
-      }
-
-      if (!dataValue) {
-        return elements.map(
-          element => element.dataset[dataKey]
-        );
-      }
-
-      elements.forEach(
-        element => element.dataset[dataKey] = dataValue
-      );
-    },
-
-    removeData(elements, dataKey) {
-      elements = this.handleNonArrays(elements);
-      if (!dataKey) {
-        elements.map(element => 
-          Object.keys(element.dataset).map(
-            key => delete element.dataset[key]
-          ).every(el => el)
-        ).every(el => el);
-        return true;
-      }
-      return elements.map(
-        element => delete element.dataset[dataKey]
-      ).every(el => el);
-    },
-
-    height(elements, newHeight) {
-      /**
-       * When this method is used to return height, it returns the height of the FIRST matched element.
-       * When this method is used to set height, it sets the height of ALL matched elements.
-       */
-      elements = this.handleNonArrays(elements);
-      if (!elements.length) {
-        return;
-      }
-      if (newHeight) {
-        if (typeof newHeight !== "string") {
-          elements.forEach(
-            element => element.style.height = newHeight + "px"
-          );
-        } else {
-          elements.forEach(
-            element => element.style.height = newHeight
-          );
-        }
-        return this.height(elements);
-      }
-      // return height as a number
-      return Number(window.getComputedStyle(elements[0]).height.match(/\d+/)[0]);
-    },
-    
-    css(elements, rule, value) {
-      elements = this.handleNonArrays(elements);
-      if (!elements.length) throw Error("No elements were given");
-      if (!value) {
-        return window.getComputedStyle(elements[0])[rule];
-      }
-      elements.forEach(
-        element => element.style[rule] = value
-      );
-      return elements;
     }
-  };
 
-  function getSpecialTransitionEndEvent() {
-    return {
-      bindType: TRANSITION_END,
-      delegateType: TRANSITION_END,
-      handle(event) {
-        if ($(event.target).is(this)) {
-          return event
-            .handleObj
-            .handler
-            .apply(this, arguments); // eslint-disable-line prefer-rest-params
-        }
-        return undefined;
-      },
-    };
-  }
+    return this.flattenArray(
+      elements.map(
+        element => Array
+          .from(element.parentElement.children)
+          .filter(el => el !== element)
+          .filter(el => this.isMatchingCriteria(el, criteria))
+      )
+    );
+  },
 
-  function transitionEndEmulator(duration) {
-    let called = false;
+  children(elements, query) {
+    // matches the query to capture tagName
+    // and other properties from it
+    
+    const [, tagName, id, className] = this.matcher(query);
 
-    $(this).one(Util.TRANSITION_END, () => {
-      called = true;
+    elements = this.handleNonArrays(elements);
+
+    return this.flattenArray(
+      Array.from(elements).map(element => element.children)
+      )
+      .filter(el => this.isMatching(el, tagName, id, className));
+  },
+
+  find(elements, query="*") {
+    elements = this.handleNonArrays(elements);
+    return this.flattenArray(
+      Array.from(elements).map(element => (
+        Array.from(element.querySelectorAll(query))
+      ))
+    );
+  },
+
+  hasClass(elements, classNames) {
+    elements = this.handleNonArrays(elements);
+    classNames = classNames.split(" ");
+    return elements.some(
+      el =>
+        classNames.every(
+          className =>
+            el.classList.contains(className)
+        )
+    );
+  },
+
+  addClass(elements, classNames) {
+    elements = this.handleNonArrays(elements);
+    elements.forEach(el => {
+      const classes = classNames.split(" ");
+      classes.forEach(c => el.classList.add(c));
     });
+  },
 
-    setTimeout(() => {
-      if (!called) {
-        Util.triggerTransitionEnd(this);
+  removeClass(elements, classNames) {
+    classNames = classNames.split(" ");
+    elements = this.handleNonArrays(elements);
+    elements.forEach(el => {
+      classNames.forEach(
+        className => el.classList.remove(className)
+      );
+    });
+  },
+
+  not(elements, criteria) {
+    elements = this.handleNonArrays(elements);
+    if (criteria instanceof HTMLElement) {
+      return elements.filter(el => el !== criteria);
+    }
+    if (typeof criteria === "string") {
+      const [, tagName, id, className] = this.matcher(criteria);
+      return elements.filter(
+        el => !this.isMatching(el, tagName, id, className)
+      );
+    }
+    return [];
+  },
+
+  attr(elements, key, value) {
+    elements = this.handleNonArrays(elements);
+    if (!value) return elements[0].getAttribute(key);
+    elements.forEach(el => el.setAttribute(key, value));
+  },
+
+  has(elements, query) {
+    elements = this.handleNonArrays(elements);
+    return elements.filter(
+        element => (
+          element.querySelectorAll(query).length > 0
+        )
+      )
+  },
+
+  onEvent(elements, event, handler, once) {
+    elements = this.handleNonArrays(elements);
+    const eventType = event.split(".")[0];
+    elements.forEach(element =>
+      {
+        element.addEventListener(eventType, handler, {once});
+        // attaches the event handler to the element so it can be refrenced later
+        element[this.EVENT_PREFIX + event] = handler;
       }
-    }, duration);
+    );
+  },
 
-    return this;
+  on(elements, event, handler) {
+    this.onEvent(elements, event, handler, false);
+  },
+
+  one(elements, event, handler) {
+    this.onEvent(elements, event, handler, true);
+  },
+
+  off(elements, event) {
+    elements = this.handleNonArrays(elements);
+    const eventType = event.split(".")[0];
+    // removing the event listener with the custom Event Handler
+    elements.forEach(
+      element => {
+        element.removeEventListener(eventType, element[this.EVENT_PREFIX + event]);
+        delete element[this.EVENT_PREFIX + event];
+      }
+    );
+  },
+
+  trigger(elements, event, data) {
+    elements = this.handleNonArrays(elements);
+    elements.forEach(
+      element => {
+        if (element[this.EVENT_PREFIX + event])
+          element[this.EVENT_PREFIX + event]({target: element, data});
+      }
+    );
+  },
+
+  data(elements, dataKey, dataValue) {
+    elements = this.handleNonArrays(elements);
+    // if a value not given for data it
+    if (!dataKey) {
+      return elements.map(
+        element => element.dataset
+      );
+    }
+
+    if (!dataValue) {
+      return elements.map(
+        element => element.dataset[dataKey]
+      );
+    }
+
+    elements.forEach(
+      element => element.dataset[dataKey] = dataValue
+    );
+  },
+
+  removeData(elements, dataKey) {
+    elements = this.handleNonArrays(elements);
+    if (!dataKey) {
+      elements.map(element => 
+        Object.keys(element.dataset).map(
+          key => delete element.dataset[key]
+        ).every(el => el)
+      ).every(el => el);
+      return true;
+    }
+    return elements.map(
+      element => delete element.dataset[dataKey]
+    ).every(el => el);
+  },
+
+  height(elements, newHeight) {
+    /**
+     * When this method is used to return height, it returns the height of the FIRST matched element.
+     * When this method is used to set height, it sets the height of ALL matched elements.
+     */
+    elements = this.handleNonArrays(elements);
+    if (!elements[0]) {
+      return;
+    }
+    if (newHeight) {
+      if (typeof newHeight !== "string") {
+        elements.forEach(
+          element => element.style.height = newHeight + "px"
+        );
+      } else {
+        elements.forEach(
+          element => element.style.height = newHeight
+        );
+      }
+      return this.height(elements);
+    }
+    // return height as a number
+    return Number(window.getComputedStyle(elements[0]).height.match(/\d+/)[0]);
+  },
+  
+  css(elements, rule, value) {
+    elements = this.handleNonArrays(elements);
+    if (!elements.length) throw Error("No elements were given");
+    if (!value) {
+      return window.getComputedStyle(elements[0])[rule];
+    }
+    elements.forEach(
+      element => element.style[rule] = value
+    );
+    return elements;
   }
+};
 
-  function setTransitionEndSupport() {
-    $.fn.mmEmulateTransitionEnd = transitionEndEmulator; // eslint-disable-line no-param-reassign
-    // eslint-disable-next-line no-param-reassign
-    $.event.special[Util.TRANSITION_END] = getSpecialTransitionEndEvent();
-  }
-
-  setTransitionEndSupport();
-
-  return Util;
-})($);
-
-const NAME = 'metisMenu';
 const DATA_KEY = 'metisMenu';
 const EVENT_KEY = `.${DATA_KEY}`;
 const DATA_API_KEY = '.data-api';
-const JQUERY_NO_CONFLICT = $.fn[NAME];
-const TRANSITION_DURATION = 350;
+// const TRANSITION_DURATION = 350;
 
 const Default = {
   toggle: true,
@@ -377,6 +356,8 @@ const Event = {
   HIDE: `hide${EVENT_KEY}`,
   HIDDEN: `hidden${EVENT_KEY}`,
   CLICK_DATA_API: `click${EVENT_KEY}${DATA_API_KEY}`,
+  // added this as an alternative to mmTransitionEnd
+  TRANSITION_END: `transitionend${EVENT_KEY}`,
 };
 
 const ClassName = {
@@ -406,10 +387,6 @@ class MetisMenu {
     const conf = this.config;
     const el = this.element;
 
-    window.Util = Util;
-
-    // const el = $(this.element);
-
     Util.addClass(el, ClassName.METIS);
 
     const ActiveEl = Util.find(
@@ -425,11 +402,6 @@ class MetisMenu {
       'aria-expanded',
       'true'
     );
-
-    // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
-    //   .children(conf.triggerElement)
-    //   .attr('aria-expanded', 'true'); // add attribute aria-expanded=true the trigger element
-    
     
     Util.addClass(
       Util.parents(
@@ -438,10 +410,6 @@ class MetisMenu {
       ),
       ClassName.ACTIVE
     );
-        
-    // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
-    //   .parents(conf.parentTrigger)
-    //   .addClass(ClassName.ACTIVE);
 
     Util.attr(
       Util.children(
@@ -455,11 +423,6 @@ class MetisMenu {
       "true"
     );
 
-    // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
-    //   .parents(conf.parentTrigger)
-    //   .children(conf.triggerElement)
-    //   .attr('aria-expanded', 'true'); // add attribute aria-expanded=true the triggers of all parents
-
     Util.addClass(
       Util.children(
         Util.has(
@@ -470,11 +433,6 @@ class MetisMenu {
       ),
       `${ClassName.COLLAPSE} ${ClassName.SHOW}`
     );
-
-    // el.find(`${conf.parentTrigger}.${ClassName.ACTIVE}`)
-    //   .has(conf.subMenu)
-    //   .children(conf.subMenu)
-    //   .addClass(`${ClassName.COLLAPSE} ${ClassName.SHOW}`);
 
     Util.addClass(
       Util.children(
@@ -489,13 +447,6 @@ class MetisMenu {
       ),
       ClassName.COLLAPSE
     );
-
-    // el
-    //   .find(conf.parentTrigger)
-    //   .not(`.${ClassName.ACTIVE}`)
-    //   .has(conf.subMenu)
-    //   .children(conf.subMenu)
-    //   .addClass(ClassName.COLLAPSE);
 
     Util.on(
       Util.children(
@@ -539,42 +490,6 @@ class MetisMenu {
         }
       }
     );
-
-    // el
-    //   .find(conf.parentTrigger)
-    //   // .has(conf.subMenu)
-    //   .children(conf.triggerElement)
-    //   .on(Event.CLICK_DATA_API, function (e) { // eslint-disable-line func-names
-    //     const eTar = $(this);
-
-    //     if (eTar.attr('aria-disabled') === 'true') {
-    //       return;
-    //     }
-
-    //     if (conf.preventDefault && eTar.attr('href') === '#') {
-    //       e.preventDefault();
-    //     }
-
-    //     const paRent = eTar.parent(conf.parentTrigger);
-    //     const sibLi = paRent.siblings(conf.parentTrigger);
-    //     const sibTrigger = sibLi.children(conf.triggerElement);
-
-    //     if (paRent.hasClass(ClassName.ACTIVE)) {
-    //       eTar.attr('aria-expanded', 'false');
-    //       self.removeActive(paRent);
-    //     } else {
-    //       eTar.attr('aria-expanded', 'true');
-    //       self.setActive(paRent);
-    //       if (conf.toggle) {
-    //         self.removeActive(sibLi);
-    //         sibTrigger.attr('aria-expanded', 'false');
-    //       }
-    //     }
-
-    //     if (conf.onTransitionStart) {
-    //       conf.onTransitionStart(e);
-    //     }
-    //   });
   }
 
   setActive(li) {
@@ -597,16 +512,15 @@ class MetisMenu {
     if (this.transitioning || Util.hasClass(element, ClassName.COLLAPSING)) {
       return;
     }
-    // todo
-    const elem = $(element);
+    const elem = element;
 
     // todo
-    const startEvent = $.Event(Event.SHOW);
-    elem.trigger(startEvent);
+    // const startEvent = $.Event(Event.SHOW);
+    // elem.trigger(startEvent);
 
-    if (startEvent.isDefaultPrevented()) {
-      return;
-    }
+    // if (startEvent.isDefaultPrevented()) {
+    //   return;
+    // }
 
     Util.addClass(
       Util.parent(
@@ -616,11 +530,17 @@ class MetisMenu {
       ClassName.ACTIVE
     );
 
-    // elem.parent(this.config.parentTrigger).addClass(ClassName.ACTIVE);
-
     // todo
     if (this.config.toggle) {
-      const toggleElem = elem.parent(this.config.parentTrigger).siblings().children(`${this.config.subMenu}.${ClassName.SHOW}`);
+      const toggleElem = Util.children(
+        Util.siblings(
+          Util.parent(
+            elem,
+            this.config.parentTrigger
+          )
+        ),
+        `${this.config.subMenu}.${ClassName.SHOW}`
+      );
       if (toggleElem.length > 0)
         this.hide(toggleElem);
     }
@@ -628,11 +548,6 @@ class MetisMenu {
     Util.removeClass(elem, ClassName.COLLAPSE);
     Util.addClass(elem, ClassName.COLLAPSING);
     Util.height(elem, 0);
-
-    // elem
-    //   .removeClass(ClassName.COLLAPSE)
-    //   .addClass(ClassName.COLLAPSING)
-    //   .height(0);
 
     this.setTransitioning(true);
 
@@ -646,22 +561,17 @@ class MetisMenu {
       Util.addClass(elem, `${ClassName.COLLAPSE} ${ClassName.SHOW}`);
       Util.height(elem, "");
 
-      // elem
-      //   .removeClass(ClassName.COLLAPSING)
-      //   .addClass(`${ClassName.COLLAPSE} ${ClassName.SHOW}`)
-      //   .height('');
-
       this.setTransitioning(false);
 
       // todo
-      elem.trigger(Event.SHOWN);
+      // elem.trigger(Event.SHOWN);
     };
 
-    // todo
-    elem
-      .height(element[0].scrollHeight)
-      .one(Util.TRANSITION_END, complete)
-      .mmEmulateTransitionEnd(TRANSITION_DURATION);
+    Array.from(elem).forEach(el => el.style.height = elem[0].scrollHeight + "px");
+    Util.one(elem, Event.TRANSITION_END, complete);
+    
+    // todo for later
+    // elem.mmEmulateTransitionEnd(TRANSITION_DURATION);
   }
 
   hide(element) {
@@ -672,16 +582,15 @@ class MetisMenu {
       return;
     }
 
-    // todo
-    const elem = $(element);
+    const elem =element;
 
     // todo
-    const startEvent = $.Event(Event.HIDE);
-    elem.trigger(startEvent);
+    // const startEvent = $.Event(Event.HIDE);
+    // elem.trigger(startEvent);
 
-    if (startEvent.isDefaultPrevented()) {
-      return;
-    }
+    // if (startEvent.isDefaultPrevented()) {
+    //   return;
+    // }
 
     Util.removeClass(
       Util.parent(
@@ -691,20 +600,13 @@ class MetisMenu {
       ClassName.ACTIVE
     );
 
-    // elem.parent(this.config.parentTrigger).removeClass(ClassName.ACTIVE);
-
     // eslint-disable-next-line no-unused-expressions
-    // todo
-    elem.height(elem.height())[0].offsetHeight;
+    // todo what the hell is this
+    // elem.height(elem.height())[0].offsetHeight;
 
     Util.removeClass(element, ClassName.SHOW);
     Util.removeClass(element, ClassName.COLLAPSE);
     Util.addClass(element, ClassName.COLLAPSING);
-
-    // elem
-    //   .addClass(ClassName.COLLAPSING)
-    //   .removeClass(ClassName.COLLAPSE)
-    //   .removeClass(ClassName.SHOW);
 
     this.setTransitioning(true);
 
@@ -713,31 +615,29 @@ class MetisMenu {
       if (!this.config || !this.element) {
         return;
       }
+
       if (this.transitioning && this.config.onTransitionEnd) {
-        // todo
         this.config.onTransitionEnd();
       }
 
       this.setTransitioning(false);
-      // todo add event handler to the element itself and call it when requested
-      elem.trigger(Event.HIDDEN);
+      // todo for later
+      // elem.trigger(Event.HIDDEN);
 
       Util.removeClass(elem, ClassName.COLLAPSING);
       Util.addClass(elem, ClassName.COLLAPSE);
-
-      // elem
-      //   .removeClass(ClassName.COLLAPSING)
-      //   .addClass(ClassName.COLLAPSE);
     };
 
     if (Util.height(elem) === 0 || Util.css(elem, "display") === 'none') {
       complete();
     } else {
-      // todo
-      elem
-        .height(0)
-        .one(Util.TRANSITION_END, complete)
-        .mmEmulateTransitionEnd(TRANSITION_DURATION);
+
+      // todo rewrite the height method
+      Util.one(elem, Event.TRANSITION_END, complete);
+      Array.from(elem).forEach(el => el.style.height = "0px");
+      
+      // todo for later
+      // elem.mmEmulateTransitionEnd(TRANSITION_DURATION);
     }
   }
 
@@ -747,7 +647,6 @@ class MetisMenu {
 
   dispose() {
     Util.removeData(this.element, DATA_KEY);
-    // $(this.element).removeData(DATA_KEY); 
 
     Util.off(
       Util.children(
@@ -759,12 +658,6 @@ class MetisMenu {
       ),
       Event.CLICK_DATA_API
     );
-
-    // $(this.element)
-    //   .find(this.config.parentTrigger)
-    //   // .has(this.config.subMenu)
-    //   .children(this.config.triggerElement)
-    //   .off(Event.CLICK_DATA_API);
 
     this.transitioning = null;
     this.config = null;
@@ -796,19 +689,6 @@ class MetisMenu {
     });
   }
 }
-/**
- * ------------------------------------------------------------------------
- * jQuery
- * ------------------------------------------------------------------------
- */
 
-$.fn[NAME] = MetisMenu.jQueryInterface; // eslint-disable-line no-param-reassign
-$.fn[NAME].Constructor = MetisMenu; // eslint-disable-line no-param-reassign
-$.fn[NAME].noConflict = () => {
-  // eslint-disable-line no-param-reassign
-  $.fn[NAME] = JQUERY_NO_CONFLICT; // eslint-disable-line no-param-reassign
-  return MetisMenu.jQueryInterface;
-};
-
-export { MetisMenu as default };
+window.MetisMenu = MetisMenu;
 //# sourceMappingURL=metisMenu.esm.js.map
