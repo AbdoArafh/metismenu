@@ -33,7 +33,7 @@ const ClassName = {
   COLLAPSED: 'mm-collapsed',
 };
 
-class MetisMenu {
+export default class MetisMenu {
   // eslint-disable-line no-shadow
   constructor(element, config) {
     this.element = element;
